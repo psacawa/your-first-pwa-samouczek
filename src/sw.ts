@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-'use strict';
+export {}
+declare var self: ServiceWorkerGlobalScope;
 
 // CODELAB: Update cache names any time any of the cached files change.
 const CACHE_NAME = 'static-cache-v1';

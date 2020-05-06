@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-'use strict';
+import * as luxon from 'luxon';
 
 const weatherApp = {
   selectedLocations: {},
@@ -36,7 +36,7 @@ function addLocation() {
   // Hide the dialog
   toggleAddDialog();
   // Get the selected city
-  const select = document.getElementById('selectCityToAdd');
+  const select: any = document.getElementById('selectCityToAdd');
   const selected = select.options[select.selectedIndex];
   const geo = selected.value;
   const label = selected.textContent;
@@ -179,7 +179,7 @@ function getForecastCard(location) {
   if (card) {
     return card;
   }
-  const newCard = document.getElementById('weather-template').cloneNode(true);
+  const newCard = document.getElementById('weather-template').cloneNode(true) as HTMLElement;
   newCard.querySelector('.location').textContent = location.label;
   newCard.setAttribute('id', id);
   newCard.querySelector('.remove-city')
@@ -223,7 +223,7 @@ function saveLocationList(locations) {
  * @return {Array}
  */
 function loadLocationList() {
-  let locations = localStorage.getItem('locationList');
+  let locations : string | object = localStorage.getItem('locationList');
   if (locations) {
     try {
       locations = JSON.parse(locations);
