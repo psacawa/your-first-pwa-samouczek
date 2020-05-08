@@ -28,6 +28,6 @@ module.exports = {
   devtool: "inline-source-map",
   devServer: {
     writeToDisk: true,
-    port: 8000
+    // port: 8000
   }
 };

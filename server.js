@@ -19,6 +19,9 @@
 'use strict';
 
 const express = require('express');
+const fs = require('fs');
+const http = require('http');
+const https = require('https');
 const fetch = require('node-fetch');
 const redirectToHTTPS = require('express-http-to-https').redirectToHTTPS;
 
@@ -187,10 +190,20 @@ function startServer() {
   app.use(express.static('dist'));
 
   // Start the server
-  return app.listen('8000', () => {
-    // eslint-disable-next-line no-console
-    console.log('Local DevServer Started on port 8000...');
-  });
+  /*
+   * return app.listen('8000', () => {
+   *   // eslint-disable-next-line no-console
+   *   console.log('Local DevServer Started on port 8000...');
+   * });
+   */
+  // let create
+  let httpServer =  http.createServer (app)
+  let privateKey  = fs.readFileSync('sslcert/rootCA.pem', 'utf8');
+  let certificate = fs.readFileSync('sslcert/rootCA.crt', 'utf8');
+  let credentials = {key : privateKey, cert: certificate}
+  let httpsServer =  https.createServer (app, credentials)
+  httpServer.listen (8080)
+  httpsServer.listen(8443)
 }
 
 startServer();

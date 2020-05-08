@@ -17,12 +17,17 @@
  */
 'use strict';
 
-let deferredInstallPrompt = null;
+interface Event {
+  prompt (): any,
+  userChoice: Promise <any>
+}
+
+let deferredInstallPrompt : Event = null;
 const installButton = document.getElementById('butInstall');
 installButton.addEventListener('click', installPWA);
 
 // CODELAB: Add event listener for beforeinstallprompt event
-
+window.addEventListener ('beforeinstallprompt', saveBeforeInstallPromptEvent)
 
 /**
  * Event handler for beforeinstallprompt event.
@@ -30,8 +35,11 @@ installButton.addEventListener('click', installPWA);
  *
  * @param {Event} evt
  */
-function saveBeforeInstallPromptEvent(evt) {
+function saveBeforeInstallPromptEvent(evt: Event) {
   // CODELAB: Add code to save event & show the install button.
+  console.log ('In the before install prompt handler')
+  deferredInstallPrompt = evt
+  installButton.removeAttribute ('hidden')
 
 }
 
@@ -41,14 +49,24 @@ function saveBeforeInstallPromptEvent(evt) {
  *
  * @param {Event} evt
  */
-function installPWA(evt) {
+function installPWA(evt: Event) {
   // CODELAB: Add code show install prompt & hide the install button.
-
+  deferredInstallPrompt.prompt()
+  (evt.srcElement as HTMLElement).setAttrbute ('hidden', true)
   // CODELAB: Log user response to prompt.
+  deferredInstallPrompt.userChoice.then (choice => {
+    if (choice.outcome == 'accepted') {
+      console.log ("User accepted A2HS:", choice)
+    } else {
+      console.log ("User rejected A2HS:", choice)
+    }
+    deferredInstallPrompt = null
+  })
 
 }
 
 // CODELAB: Add event listener for appinstalled event
+window.addEventListener('appinstalled', logAppInstalled);
 
 /**
  * Event handler for appinstalled event.
@@ -56,7 +74,7 @@ function installPWA(evt) {
  *
  * @param {Event} evt
  */
-function logAppInstalled(evt) {
+function logAppInstalled(evt: Event) {
   // CODELAB: Add code to log the event
-
+  console.log("Weather app installed", evt)
 }

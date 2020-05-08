@@ -15,32 +15,105 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-export {}
+export {};
 declare var self: ServiceWorkerGlobalScope;
 
 // CODELAB: Update cache names any time any of the cached files change.
-const CACHE_NAME = 'static-cache-v1';
+const CACHE_NAME = "static-cache-v3";
+const DATA_CACHE_NAME = "data-cache-v1";
 
 // CODELAB: Add list of files to cache here.
 const FILES_TO_CACHE = [
+  "/",
+  // tu zmiana z oryginalnych plików
+  "/index.html",
+  "/manifest.json",
+  "/app.js",
+  "/install.js",
+  "/styles/inline.css",
+  "/images/add.svg",
+  "/images/clear-day.svg",
+  "/images/clear-night.svg",
+  "/images/cloudy.svg",
+  "/images/fog.svg",
+  "/images/hail.svg",
+  "/images/install.svg",
+  "/images/partly-cloudy-day.svg",
+  "/images/partly-cloudy-night.svg",
+  "/images/rain.svg",
+  "/images/refresh.svg",
+  "/images/sleet.svg",
+  "/images/snow.svg",
+  "/images/thunderstorm.svg",
+  "/images/tornado.svg",
+  "/images/wind.svg"
 ];
+// const FILES_TO_CACHE = ["/offline.html"];
 
-self.addEventListener('install', (evt) => {
-  console.log('[ServiceWorker] Install');
+self.addEventListener("install", evt => {
+  console.log("[ServiceWorker] Install");
   // CODELAB: Precache static resources here.
-
+  evt.waitUntil(
+    self.caches
+      .open(CACHE_NAME)
+      .then(cache => {
+        console.log("[ServiceWorker] Precaching files");
+        return cache.addAll(FILES_TO_CACHE);
+      })
+      .catch(error => {
+        console.error("[ServiceWorker] Caching static files failed", error);
+      })
+  );
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (evt) => {
-  console.log('[ServiceWorker] Activate');
+self.addEventListener("activate", evt => {
+  console.log("[ServiceWorker] Activate");
   // CODELAB: Remove previous cached data from disk.
-
+  evt.waitUntil(
+    caches.keys().then(keylist => {
+      return Promise.all(
+        keylist.map(key => {
+          if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
+            console.log("[ServiceWorker] Removing old cache");
+            return caches.delete(key);
+          } else {
+            return null;
+          }
+        })
+      );
+    })
+  );
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (evt) => {
-  console.log('[ServiceWorker] Fetch', evt.request.url);
+self.addEventListener("fetch", evt => {
   // CODELAB: Add fetch event handler here.
-
+  if (evt.request.url.includes("/forecast/")) {
+    console.log("[Service Worker] Fetch (data)", evt.request.url);
+    evt.respondWith(
+      caches.open(DATA_CACHE_NAME).then(cache => {
+        return fetch(evt.request)
+          .then(response => {
+            // If the response was good, clone it and store it in the cache.
+            if (response.status === 200) {
+              cache.put(evt.request.url, response.clone());
+            }
+            return response;
+          })
+          .catch(err => {
+            // Network request failed, try to get it from the cache.
+            return cache.match(evt.request);
+          });
+      })
+    );
+    return;
+  }
+  evt.respondWith(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.match(evt.request).then(response => {
+        return response || fetch(evt.request);
+      });
+    })
+  );
 });
